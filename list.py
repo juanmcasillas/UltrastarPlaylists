@@ -430,6 +430,8 @@ if __name__ == "__main__":
     my_locals['GENRES'] = GENRES
     
     banner = []
+    banner.append("Commands:")
+    
     for i in my_locals.keys():
         banner.append("%s" % i)
     banner = "\n".join(banner)
