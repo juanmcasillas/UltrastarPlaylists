@@ -4,6 +4,17 @@ Manage &amp; Create playlist and sort the song database from Ultrastar with sql 
 ## Motivation
 Create easily and fast playlist, based on sql queries using all the data fields in the songs, also, support for changing some attributes in the songs, and detect if the song has duets and son on. The code is a work in progress, but it pretty functional
 
+
+## Dependencies
+
+ * python
+ * C:\software\python311\python.exe -m pip install flask
+ * C:\software\python311\python.exe -m pip install flask-bootstrap
+
+C:\software\python311\Scripts\flask.exe --app .\app.py run
+http://127.0.0.1:5000/
+
+
 ## Commands
 
 `python.exe .\list.py 'C:\Games\UltraStar WorldParty\songs' 'C:\Games\UltraStar WorldParty\playlists'` Launch the script with 
@@ -30,3 +41,4 @@ commands:
 * `set_genre(get("select * from songs where genre='UNKNOWN'"),"Pop")` Set all unknown genre to 'Pop'
 * `create_playlist(get("select id from songs where genre='Pop'"), "mypop")` Create a playlist called mypop, using all the songs in genre Pop
 * ` get("select id, title from songs where language in ( 'Español', 'Spanish' ) and genre = 'Pop' ")` Get songs in spanish and genre pop
+
