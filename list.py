@@ -296,20 +296,26 @@ def insert_into_db(cursor, item):
         val = item['players'][key]
         cursor.execute(sql_insert_players,(id, key, val))
     
-def store_in_db(config, refresh=False, database=None):
+def store_in_db(config, dbfile=None, refresh=False, database=None, init=True):
     if not refresh:
-        db = sqlite3.connect('file:cachedb?mode=memory&cache=shared')
+        if dbfile:
+            db = sqlite3.connect(dbfile)
+        else:
+            db = sqlite3.connect('file:cachedb?mode=memory&cache=shared')
         db.row_factory = sqlite3.Row 
     else:
         db = database
         db.row_factory = sqlite3.Row 
     
-    create_table(db.cursor())
-    cursor = db.cursor()
-    for c in config:
-        insert_into_db(cursor, c)
-    cursor.close()
-    print("%d records inserted in DB" % len(config))
+    if init:
+        create_table(db.cursor())
+        cursor = db.cursor()
+        for c in config:
+            insert_into_db(cursor, c)
+        cursor.close()
+        print("%d records inserted in DB" % len(config))
+    
+    db.commit()
     return db
 
 def test_db(db):
@@ -380,7 +386,7 @@ def db_refresh_db():
     # careful with the global variables.
     songs = get_songs(args.songs_dir, args.verbose)
     config = process_songs(songs, args.verbose)
-    store_in_db(config, refresh=True, database=db)
+    store_in_db(config, dbfile=args.persistent, refresh=True, database=db)
 
 def db_create_playlist(items, name):
     cursor = db.cursor()
@@ -392,10 +398,15 @@ def db_create_playlist(items, name):
     store_playlist(songs, args.playlist_dir, name)
 
 
-def load_db(path, verbose):
-    songs = get_songs(path, verbose)
-    config = process_songs(songs, verbose)
-    db = store_in_db(config)
+def load_db(path, verbose, dbfile, init_db):
+    
+    config = []
+    if init_db:
+        songs = get_songs(path, verbose)
+        config = process_songs(songs, verbose)
+        print("initializing db from songs")
+    
+    db = store_in_db(config, dbfile=dbfile, init=init_db)
     return db
 
 
@@ -405,12 +416,14 @@ def load_db(path, verbose):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--persistent", help="Use a persistent database instead the memory one")
     parser.add_argument("-v", "--verbose", help="Show data about file and processing", action="count")
+    parser.add_argument("-k", "--keep_db", help="Uses the stored db data instead loading one", action="store_false")
     parser.add_argument("songs_dir", help="Song directory")
     parser.add_argument("playlist_dir", help="Playlist directory")
     args = parser.parse_args()
     
-    db = load_db(args.songs_dir, args.verbose)
+    db = load_db(args.songs_dir, args.verbose, args.persistent, args.keep_db)
     
     #test_db(db)
 
@@ -431,7 +444,7 @@ if __name__ == "__main__":
     
     banner = []
     banner.append("Commands:")
-    
+
     for i in my_locals.keys():
         banner.append("%s" % i)
     banner = "\n".join(banner)

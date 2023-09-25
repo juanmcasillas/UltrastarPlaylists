@@ -29,3 +29,4 @@ commands:
 * `set_edition(get("select * from songs where edition='UNKNOWN'"),"Sin Edición")` Change all the songs without edition to 'Sin Edición'
 * `set_genre(get("select * from songs where genre='UNKNOWN'"),"Pop")` Set all unknown genre to 'Pop'
 * `create_playlist(get("select id from songs where genre='Pop'"), "mypop")` Create a playlist called mypop, using all the songs in genre Pop
+* ` get("select id, title from songs where language in ( 'Español', 'Spanish' ) and genre = 'Pop' ")` Get songs in spanish and genre pop
