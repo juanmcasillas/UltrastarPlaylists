@@ -1,0 +1,57 @@
+{% extends "main.html" %}
+
+
+{% block html_attribs %} lang="en" {% endblock %}
+
+{% block content %}
+
+<table id="songs" class="display nowrap">
+    <thead>
+        <tr>
+            <th>id</th>
+            <th>artist</th>
+            <th>song</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+
+
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+        $(document).ready( function () {
+            $('#songs').DataTable({
+                language: {
+                  url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+                },
+                ajax: '/data',
+                columns: [
+                    { data: 'id'},
+                    { data: 'artist'},
+                    { data: 'song'}
+                ],
+                pagingType: 'full_numbers',
+                dom: 'frBtlip',
+                buttons: [
+                    'colvis',
+                    'excel',
+                    'pdf'
+                ],
+                "lengthMenu": [ 10, 25, 50, 75, 100, -1 ],
+                "pageLength": 50
+                
+            });
+            var dt = $('#songs').DataTable();
+            dt.columns([0]).visible(false); // id
+        } );
+    </script>
+{% endblock %}

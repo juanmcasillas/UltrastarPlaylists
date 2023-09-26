@@ -10,8 +10,11 @@ Create easily and fast playlist, based on sql queries using all the data fields 
  * python
  * C:\software\python311\python.exe -m pip install flask
  * C:\software\python311\python.exe -m pip install flask-bootstrap
-
+ * C:\software\python311\python.exe -m pip install mutagen 
+ 
 C:\software\python311\Scripts\flask.exe --app .\app.py run
+ flask.exe --app app run --debug
+ 
 http://127.0.0.1:5000/
 
 

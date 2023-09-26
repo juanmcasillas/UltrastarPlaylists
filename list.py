@@ -4,14 +4,22 @@ import os
 from collections import namedtuple
 import sqlite3
 import code
+import shutil
+import datetime
 
 from literals import *
 
-
+import mutagen.mp3
 
 # example run 
 # C:\software\python311\python.exe .\list.py 'C:\Games\UltraStar WorldParty\songs' 'C:\Games\UltraStar WorldParty\playlists\'
 # 
+def seconds_to_str(seconds):
+    return str(datetime.timedelta(seconds=seconds))
+
+def do_backup(filename, ext="bak"):
+    bckfile = "%s.%s" % (filename, ext)
+    shutil.copy2(filename, bckfile)
 
 def store_playlist(songs, playlist_dir, name, encoding=ENCODING):
 
@@ -23,6 +31,7 @@ def store_playlist(songs, playlist_dir, name, encoding=ENCODING):
         text.append("%s : %s" % (song['artist'], song['title']))
       
     filename = os.path.sep.join([playlist_dir, "%s.upl" % name])
+    do_backup(filename)
     with open(filename, 'w', encoding=encoding) as f:
         f.write("\n".join(text))
 
@@ -39,7 +48,12 @@ def update_config(filename, field, newvalue, encoding=ENCODING):
                 args = l[1:].split(':')
                 command = args[0]
                 value = "".join(args[1:])
+                # if found the required field:
                 if command.lower() == field.lower():
+                    
+                    if command.lower() in [ "bpm", "videogap" ]:
+                        newvalue = value.replace('.',',')
+                    
                     new_line="#%s:%s" % (field.upper(),newvalue)
                     new_file.append(new_line)
                 else:
@@ -47,6 +61,7 @@ def update_config(filename, field, newvalue, encoding=ENCODING):
             else:
                 new_file.append(l)
     
+    do_backup(filename)
     with open(filename, 'w', encoding=encoding) as f:
         f.write("\n".join(new_file))    
     
@@ -110,6 +125,7 @@ def add_tags(tags, data, fname, encoding=ENCODING):
         entry = "#%s:%s\n" % (tag.upper(), value)
         data = entry + data
     
+    do_backup(fname)
     with open(fname, 'w', encoding=encoding) as f:
         f.write(data)    
 
@@ -169,16 +185,24 @@ def read_config(data, fname):
 def merge_config(config, config_multi, dirname, path):
 
     players = {}
-    
+    is_multi = 0
     if config_multi:
         for item in config_multi.keys():
             if item.startswith('duetsinger'):
+                is_multi = 1
                 entry = item.replace('duetsinger','')
                 players[entry] = config_multi[item]
+
+    filename_mp3 = os.path.sep.join([dirname,config['mp3']])
+    print(filename_mp3)
     
+    # add synthetic fields
+
     config['players'] = players
     config['path'] = path
     config['dirname'] = dirname
+    config['duration'] = mutagen.mp3.MP3(filename_mp3).info.length
+    config['multi'] = is_multi
     return config
 
 
@@ -248,7 +272,9 @@ def create_table(cursor):
         bpm real not null,
         gap real not null,
         path text not null,
-        dirname text not null
+        dirname text not null,
+        duration timestamp not null default 0,
+        multi integer not null default 0
     );
     """
     sql_multi = """
@@ -274,22 +300,24 @@ def insert_into_db(cursor, item):
 
     sql_insert_songs = """
     insert into SONGS(title, artist, language, edition, genre, year,
-                      mp3, cover, video, videogap, bpm, gap, path, dirname) 
+                      mp3, cover, video, videogap, bpm, gap, 
+                      path, dirname, duration, multi) 
             values ( ?, ?, ?, ?, ?, ?, 
                      ?, ?, ?, ?, ?, ?,
-                     ?, ? );
+                     ?, ?, ?, ? );
     """
 
     sql_insert_players = """
     insert into MULTI(song_id, player, singer) values ( ?, ?, ? );
     """
-   
+    print(item)
     cursor.execute(sql_insert_songs, (item['title'], item['artist'],
                                        item['language'], 
                     item['edition'], item['genre'], item['year'],
                     item['mp3'],item['cover'],item['video'],
                     item['videogap'],item['bpm'],item['gap'],
-                    item['path'], item['dirname'] ))
+                    item['path'], item['dirname'],
+                    item['duration'], item['multi'] ))
 
     id = cursor.lastrowid
     for key in item['players']:
@@ -339,6 +367,21 @@ def console_exit():
 
 # all this functions use DB as global variable. Proceed with caution
 
+def db_get_input(input):
+    """if string, run the query and return the items, but if not, return the array
+
+    Args:
+        input (str / list): if str run the query, if list pass it
+
+    Returns:
+        list: the items
+    """
+
+    if isinstance(input, str):
+        return db_get_results(input)
+    return input
+
+
 def db_get_results(query):
     cursor = db.cursor()
     cursor.execute(query)
@@ -356,31 +399,26 @@ def db_get_fields():
         fields.append('%s (%s)' % (i[1], i[2]))
     return fields
 
-def db_set_genre(items,genre):
+def db_set_field(input,field, value):
+    
+    items = db_get_input(input)
+
     cursor = db.cursor()
     for i in items:
-        cursor.execute("update songs set genre=? where id=?", [genre,i['id']])
+        cursor.execute("update songs set %s=? where id=?" % field, [value,i['id']])
         # save file
         cursor.execute("select * from songs where id = ?", [i['id']])
         song = cursor.fetchone()
         if not song:
-            print("warning, can't update song %s" % i['id'])
+            print("warning, can't update song %s (%s:%s)" % (i['id'], field, value))
             continue
-        update_song_file(i['dirname'],field='GENRE', value=genre)
+        update_song_file(i['dirname'],field=field, value=value)
     cursor.close()
 
-def db_set_edition(items,edition):
-    cursor = db.cursor()
-    for i in items:
-        cursor.execute("update songs set edition=? where id=?", [edition,i['id']])
-        # save file
-        cursor.execute("select * from songs where id = ?", [i['id']])
-        song = cursor.fetchone()
-        if not song:
-            print("warning, can't update song %s" % i['id'])
-            continue
-        update_song_file(i['dirname'],field='EDITION', value=edition)
-    cursor.close()
+
+
+
+
     
 def db_refresh_db():
     # careful with the global variables.
@@ -388,7 +426,8 @@ def db_refresh_db():
     config = process_songs(songs, args.verbose)
     store_in_db(config, dbfile=args.persistent, refresh=True, database=db)
 
-def db_create_playlist(items, name):
+def db_create_playlist(input, name):
+    items = db_get_input(input)
     cursor = db.cursor()
     songs = []
     for i in items:
@@ -434,10 +473,10 @@ if __name__ == "__main__":
     my_locals["db"] = db
     my_locals["get"] = db_get_results
     my_locals["fields"] = db_get_fields
-    my_locals["set_genre"] = db_set_genre
-    my_locals["set_edition"] = db_set_edition
+    my_locals["set_field"] = db_set_field
     my_locals["refresh"] = db_refresh_db
     my_locals["create_playlist"] = db_create_playlist
+    my_locals["seconds_to_str"] = seconds_to_str
     my_locals['LANGUAGES'] = LANGUAGES
     my_locals['EDITIONS'] = EDITIONS
     my_locals['GENRES'] = GENRES
