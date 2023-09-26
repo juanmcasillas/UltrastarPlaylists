@@ -1,0 +1,1 @@
+ D:\Software\python39\Scripts\flask.exe --app .\app.py run --debug          

@@ -4,6 +4,9 @@ from flask_bootstrap import Bootstrap
 def create_app():
   app = Flask(__name__)
   Bootstrap(app)
+  # to serve all the files from local, instead of CDN
+  app.config['BOOTSTRAP_SERVE_LOCAL'] = True
+
   return app
 
 
