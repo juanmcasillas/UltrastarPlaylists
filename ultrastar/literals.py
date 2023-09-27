@@ -1,6 +1,4 @@
 
-ENCODING = 'iso-8859-15'
-
 LANGUAGES = {}
 
 LANGUAGES['en'] = [

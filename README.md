@@ -16,7 +16,8 @@ Create easily and fast playlist, based on sql queries using all the data fields 
 ## Run
  * `C:\software\python311\Scripts\flask.exe --app .\app.py run`
  * `flask.exe --app app run --debug`
- 
+ * `/usr/local/bin/flask --app ./ultraweb.py run --debug`
+ * `/usr/local/bin/flask --app 'ultraweb:create_app("../config/config_www.cfg")' run --debug` 
 http://127.0.0.1:5000/
 
 

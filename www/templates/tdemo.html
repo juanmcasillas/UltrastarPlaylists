@@ -10,7 +10,22 @@
         <tr>
             <th>id</th>
             <th>artist</th>
-            <th>song</th>
+            <th>title</th>
+            <th>language</th>
+            <th>edition</th>
+            <th>genre</th>
+            <th>year</th>
+            <th>mp3</th>
+            <th>cover</th>
+            <th>video</th>
+            <th>videogap</th>
+            <th>bpm</th>
+            <th>gap</th>
+            <th>path</th>
+            <th>dirname</th>
+            <th>duration</th>
+            <th>duet?</th>
+
         </tr>
     </thead>
     <tbody>
@@ -37,7 +52,22 @@
                 columns: [
                     { data: 'id'},
                     { data: 'artist'},
-                    { data: 'song'}
+                    { data: 'title'},
+                    { data: 'language'},
+                    { data: 'edition'},
+                    { data: 'genre'},
+                    { data: 'year'},
+                    { data: 'mp3'}, // 7
+                    { data: 'cover'},
+                    { data: 'video'},
+                    { data: 'videogap'},
+                    { data: 'bpm'},
+                    { data: 'gap'}, // 12
+                    { data: 'path'},
+                    { data: 'dirname'},
+                    { data: 'duration'},
+                    { data: 'multi'},
+
                 ],
                 pagingType: 'full_numbers',
                 dom: 'frBtlip',
@@ -52,6 +82,23 @@
             });
             var dt = $('#songs').DataTable();
             dt.columns([0]).visible(false); // id
+            dt.columns([7]).visible(false); // mp3
+            dt.columns([8]).visible(false); // cover
+            dt.columns([9]).visible(false); // video
+            dt.columns([10]).visible(false); // videogap
+            dt.columns([11]).visible(false); // bmp
+            dt.columns([12]).visible(false); // gap
+            dt.columns([13]).visible(false); // path
+            dt.columns([14]).visible(false); // dirname
+
+            dt.on('click', 'tbody tr', function (e) {
+                e.currentTarget.classList.toggle('selected');
+            });    
+            
+            //document.querySelector('#button').addEventListener('click', function () {
+            // alert(dt.rows('.selected').data().length + ' row(s) selected');
+            //});
+
         } );
     </script>
 {% endblock %}
