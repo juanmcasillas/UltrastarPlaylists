@@ -6,19 +6,21 @@ Create easily and fast playlist, based on sql queries using all the data fields 
 
 
 ## Dependencies
-
+ * https://bootstrap-flask.readthedocs.io/en/stable/migrate/
  * python
  * C:\software\python311\python.exe -m pip install Flask==2.3.3
  * C:\software\python311\python.exe -m pip install flask-bootstrap
  * C:\software\python311\python.exe -m pip install mutagen 
 
-
+ * C:\software\python311\python.exe -m pip uninstall flask-bootstrap bootstrap-flask
+ * C:\software\python311\python.exe -m pip install bootstrap-flask
 ## Run
  * `C:\software\python311\Scripts\flask.exe --app .\app.py run`
  * `flask.exe --app app run --debug`
  * `/usr/local/bin/flask --app ./ultraweb.py run --debug`
  * `/usr/local/bin/flask --app 'ultraweb:create_app("../config/config_www.cfg")' run --debug` 
-http://127.0.0.1:5000/
+ * `C:\software\python311\Scripts\flask --app 'ultraweb:create_app(\"../config/config_www.cfg\")' run --debug`
+ * [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
 
 
 ## Commands
