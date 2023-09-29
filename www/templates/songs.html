@@ -6,11 +6,10 @@
 
 <div class="container-fluid">
 
-    <div class="h1">Song List</div>
-    <div  class="d-flex flex-row flex-wrap">
+<div class="h1">Song List</div>
+<div  class="">
 
-
-<table id="songs" class="display nowrap" >
+<table id="songs" class="display nowrap responsive" width="100%">
     <thead>
         <tr>
             <th>id</th>
@@ -84,6 +83,7 @@
                     { data: 'dirname'},
                     { data: 'duration'},
                     { data: 'multi'},
+                    { data: 'mp3' }, // fake for player
 
                 ],
                 pagingType: 'full_numbers',
@@ -166,12 +166,22 @@
                         // `data` option, which defaults to the column being worked with, in
                         // this case `data: 0`.
                         render: (data, type, row) => 
-                            '<audio controls>' +
-                            '<source src="/mp3/'+ row['id'] + '" >' +
+                            '<audio controls="controls" preload="none">' +
+                            '<source src="/mp3/'+ row['id'] + '">' +
                             '</audio>'
                             ,
                         targets: 17
                     },
+                    {
+                        // The `data` parameter refers to the data for the cell (defined by the
+                        // `data` option, which defaults to the column being worked with, in
+                        // this case `data: 0`.
+                        render: (data, type, row) => 
+                            '<a href="/songs?artist=' +  encodeURIComponent(row['artist']) + '">' + row['artist'] + '</a>'
+                            ,
+                        targets: 1
+                    },
+                    
                     { visible: true, targets: [17] }
                 ]
                 

@@ -1,11 +1,16 @@
-from flask import Flask, render_template, abort, jsonify, send_from_directory, request
+from flask import Flask, render_template, abort, jsonify, send_from_directory, request, make_response
+
+
 from flask_bootstrap import  Bootstrap5
 import base64
+import urllib
 import sys
 sys.path.append('..')
 from ultrastar.songhelper import UltraStarHelper
 from ultrastar.appenv import AppEnv
 from ultrastar.helper import Helper
+
+
 
 def create_app(config_file):
     app = Flask(__name__)
@@ -29,6 +34,13 @@ def create_app(config_file):
     def b64decode(s):
         return base64.b64decode(s).decode()
 
+    @app.template_filter()
+    def uuencode(s):
+        return urllib.parse.quote_plus(s.encode('utf-8'))
+
+    @app.template_filter()
+    def uudecode(s):
+        return urllib.parse.unquote(s)
 
     @app.route("/")
     def main():
@@ -57,20 +69,18 @@ def create_app(config_file):
         search = request.args.get('search', default = "", type = str)
         title="Ultrastar song list"
         if artist_id:
-            
-            artist_id = base64.b64decode(artist_id)
+            artist_id = uudecode(artist_id)
             cursor = app.ultrastar_helper.db.cursor()
             cursor.execute("select artist from songs where artist=?",(artist_id,))
-            print(artist_id)
             artist = cursor.fetchone()
             cursor.close()
             artist = dict(artist)
-            title = "Ultrastar song list for %s" % artist   
+            title = "Ultrastar song list for %s" % artist_id   
         
         
         return render_template("songs.html", 
                                title=title, 
-                               artist=artist_id, 
+                               artist=uuencode(artist_id), 
                                search=search,
                                search_action = "/songs")
     
@@ -109,6 +119,7 @@ def create_app(config_file):
 
 
     @app.route('/img/cover/<id>')
+    
     def serve_img(id):
         # use the id of the song to get the cover
         # but use also the cover for the artist
@@ -117,7 +128,9 @@ def create_app(config_file):
         item = cursor.fetchone()
         if not item:
             abort(404)
-        return send_from_directory(item["dirname"], item["cover"], as_attachment=False)
+        response = make_response(send_from_directory(item["dirname"], item["cover"], as_attachment=False))
+        response.cache_control.max_age = 300
+        return response
 
     @app.route('/mp3/<id>')
     def serve_mp3(id):
@@ -128,7 +141,9 @@ def create_app(config_file):
         item = cursor.fetchone()
         if not item:
             abort(404)
-        return send_from_directory(item["dirname"], item["mp3"], as_attachment=False)
+        response = make_response(send_from_directory(item["dirname"], item["mp3"], as_attachment=False))
+        response.cache_control.max_age = 300
+        return response
 
     @app.errorhandler(404)
     def page_not_found(error):

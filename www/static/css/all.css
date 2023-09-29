@@ -12,3 +12,16 @@
 .card-artist-link:hover > div {
     background-color: rgb(170, 170, 170);
 }
+
+/* the datatables wrapper and container */
+/*
+#songs_wrapper {
+    width: auto%;
+    
+}
+
+#songs {
+    width: auto%;
+    border: 1px red solid;
+}
+*/

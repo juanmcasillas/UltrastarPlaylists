@@ -10,10 +10,10 @@
     <div class="d-flex flex-row flex-wrap">
 
         {% for item in items -%}
-        <a class="card-artist-link" href="/songs?artist={{item.artist|b64encode}}">
+        <a class="card-artist-link" href="/songs?artist={{item.artist|uuencode}}">
         <div class="card h-100 card-artist">
             <img src="/img/cover/{{item.id}}" class="card-img-top border" >
-            <div class="card-body">
+            <div class="card-body text-center">
                 <div class="card-title h6">
                     {{item.artist}} <nobr><span class="card-artist-songs">({{item.songs}} songs)</span></nobr>
                 </div>
