@@ -1,0 +1,216 @@
+{% extends "main.html" %}
+{% block html_attribs %} lang="en" {% endblock %}
+
+{% block content %}
+{{super()}}
+
+<div class="container-fluid">
+
+    <div class="h1">Song List</div>
+    <div  class="d-flex flex-row flex-wrap">
+
+
+<table id="songs" class="display nowrap" >
+    <thead>
+        <tr>
+            <th>id</th>
+            <th>artist</th>
+            <th>title</th>
+            <th>language</th>
+            <th>edition</th>
+            <th>genre</th>
+            <th>year</th>
+            <th>mp3</th>
+            <th>cover</th>
+            <th>video</th>
+            <th>videogap</th>
+            <th>bpm</th>
+            <th>gap</th>
+            <th>path</th>
+            <th>dirname</th>
+            <th>duration</th>
+            <th>duet?</th>
+            <th>Player</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td></td>
+        </tr>
+    </tbody>
+</table>
+
+</div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+
+    <script>
+        $(document).ready( function () {
+
+            
+            // enable this to get the filters working by column
+            // $('#songs thead tr')
+            //     .clone(true)
+            //     .addClass('filters')
+            //     .appendTo('#songs thead');
+                
+
+            $('#songs').DataTable({
+                autowidth: true,
+                language: {
+                  url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+                },
+                ajax: '/data?artist={{artist}}&search={{search}}',
+                columns: [
+                    { data: 'id'},
+                    { data: 'artist'},
+                    { data: 'title'},
+                    { data: 'language'},
+                    { data: 'edition'}, // 4
+                    { data: 'genre'}, // 5
+                    { data: 'year'},
+                    { data: 'mp3'}, // 7
+                    { data: 'cover'},
+                    { data: 'video'},
+                    { data: 'videogap'},
+                    { data: 'bpm'},
+                    { data: 'gap'}, // 12
+                    { data: 'path'},
+                    { data: 'dirname'},
+                    { data: 'duration'},
+                    { data: 'multi'},
+
+                ],
+                pagingType: 'full_numbers',
+                dom: 'frBtlip',
+                buttons: [
+                    'colvis',
+                    'excel',
+                    'pdf'
+                ],
+                "lengthMenu": [ 10, 25, 50, 75, 100, -1 ],
+                "pageLength": 50,
+
+                // column filtering begin
+
+                orderCellsTop: true,
+                fixedHeader: true,
+                initComplete: function () {
+                  
+                    // set main container visibility
+                   
+                    var api = this.api();
+        
+                    // For each column
+                    api
+                        .columns()
+                        .eq(0)
+                        .each(function (colIdx) {
+                            // Set the header cell to contain the input element
+                            var cell = $('.filters th').eq(
+                                $(api.column(colIdx).header()).index()
+                            );
+                            var title = $(cell).text();
+                            if ($(api.column(colIdx).header()).index() >= 0) {
+                                $(cell).html('<input type="text" placeholder="' + title + '"/>');
+                            }
+
+                            if (title == "Player") {
+                                $(cell).html("");
+                            }
+                             
+                            // On every keypress in this input
+                            $(
+                                'input',
+                                $('.filters th').eq($(api.column(colIdx).header()).index())
+                            )
+                                .off('keyup change')
+                                .on('change', function (e) {
+                                    // Get the search value
+                                    $(this).attr('title', $(this).val());
+                                    var regexr = '({search})'; //$(this).parents('th').find('select').val();
+        
+                                    var cursorPosition = this.selectionStart;
+                                    // Search the column for that value
+                                    api
+                                        .column(colIdx)
+                                        .search(
+                                            this.value != ''
+                                                ? regexr.replace('{search}', '(((' + this.value + ')))')
+                                                : '',
+                                            this.value != '',
+                                            this.value == ''
+                                        )
+                                        .draw();
+                                })
+                                .on('keyup', function (e) {
+                                    e.stopPropagation();
+                                    var cursorPosition = this.selectionStart;
+                                    $(this).trigger('change');
+                                    $(this)
+                                        .focus()[0]
+                                        .setSelectionRange(cursorPosition, cursorPosition);
+                                });
+                        });
+                },
+
+                // column filtering end
+                columnDefs: [
+                    {
+                        // The `data` parameter refers to the data for the cell (defined by the
+                        // `data` option, which defaults to the column being worked with, in
+                        // this case `data: 0`.
+                        render: (data, type, row) => 
+                            '<audio controls>' +
+                            '<source src="/mp3/'+ row['id'] + '" >' +
+                            '</audio>'
+                            ,
+                        targets: 17
+                    },
+                    { visible: true, targets: [17] }
+                ]
+                
+            });
+            var dt = $('#songs').DataTable();
+            dt.columns([0]).visible(false); // id
+            dt.columns([4]).visible(false); // edition
+            dt.columns([5]).visible(false); // genre
+            dt.columns([6]).visible(false); // year
+            dt.columns([7]).visible(false); // mp3
+            dt.columns([8]).visible(false); // cover
+            dt.columns([9]).visible(false); // video
+            dt.columns([10]).visible(false); // videogap
+            dt.columns([11]).visible(false); // bmp
+            dt.columns([12]).visible(false); // gap
+            dt.columns([13]).visible(false); // path
+            dt.columns([14]).visible(false); // dirname
+            
+            dt.on('click', 'tbody tr', function (e) {
+                e.currentTarget.classList.toggle('selected');
+            });    
+            
+            // dt.on( 'buttons-action', function ( e, buttonApi, dataTable, node, config ) {
+            //     if (buttonApi.text() == 'mp3') {
+            //         console.log( 'Button '+buttonApi.text()+' was activated' );
+            //         $(cell).html('<input type="text" placeholder="' + title + '"/>');
+            //     }
+            // } );
+
+            // column filtering 
+
+        
+            // till here
+
+
+            //document.querySelector('#button').addEventListener('click', function () {
+            // alert(dt.rows('.selected').data().length + ' row(s) selected');
+            //});
+
+        } );
+    </script>
+{% endblock %}

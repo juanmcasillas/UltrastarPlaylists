@@ -1,0 +1,14 @@
+.card-artist {
+    max-width:10em;
+    min-width: 5em;
+    min-height: 16em;
+    max-height: 16em;
+}
+.card-artist-songs {
+    font-size: small;
+    font-style: italic;
+}
+
+.card-artist-link:hover > div {
+    background-color: rgb(170, 170, 170);
+}
