@@ -16,12 +16,15 @@ import sqlite3
 import shutil
 import mutagen.mp3
 
+import sys
+sys.path.append('..')
 
-from .appenv import AppEnv
-from .literals import *
-from .helper import Helper
+from ultrastar.appenv import AppEnv
+from ultrastar.literals import *
+from ultrastar.helper import Helper
 
 SongInfo = namedtuple('SongInfo', ['config','is_multi', 'dirname' ])
+PlaylistInfo = namedtuple('PlaylistInfo', ['name','path', 'filename', 'songs', 'len' ])  
 
 class UltraStarHelper:
     def __init__(self, config):
@@ -327,6 +330,80 @@ class UltraStarHelper:
                         )
         return songs
 
+    def read_playlist(self, fname):
+        """read the playlist and build the configuration item
+            Playlist format:
+            #Name: name
+            #Songs:
+            artist : title
+            artist : title
+            ...
+        
+        Args:
+            fname (playlist): a named tuple with all the values
+        """
+
+        playlist_name = None
+        playlist_songs = []
+        playlist_file = os.path.basename(fname)
+
+        with open(fname,'r', encoding=self.config.encoding) as f:
+            text = f.read()
+            for l in text.split('\n'):
+                if l.startswith('#'):
+                    args = l[1:].split(':')
+                    command = args[0].strip()
+                    value = "".join(args[1:])
+                    if command.lower() == "name":
+                        playlist_name = value.strip()
+                        continue
+                else:
+                    l = l.strip()
+                    if not l:
+                        continue
+                    artist,title = list(map(lambda x: x.strip(),l.split(":")))
+                    song_dir = " - ".join([artist, title])
+                    song_path = os.path.sep.join([self.config.full_songs_dir, song_dir])
+                    entry = { 'artist': artist, 'title': title, 'path': song_path }
+
+                    if not os.path.exists(song_path) or not os.path.isdir(song_path):
+                        if self.verbose > 1:
+                            print("Invalid song entry on playlist %s: %s, song dir not found" % (playlist_name, song_path))
+                            continue
+                                  
+                    playlist_songs.append(entry)
+
+        if  not playlist_name or playlist_songs == []:
+            if self.verbose > 1:
+                print("can't read configuration from file: %s (corrupt data?)" % fname)
+                return None
+
+        return PlaylistInfo(name=playlist_name, 
+                            path=fname,
+                            filename = playlist_file,
+                            songs=playlist_songs,
+                            len = len(playlist_songs))
+
+
+
+    def get_playlists(self):
+        """return the list of the playlists
+
+        Returns:
+            list: list with the data of the playlists (dict)
+        """
+
+
+        playlists = []
+        for entry in os.listdir(self.config.full_playlist_dir):
+            full_path = os.path.sep.join([self.config.full_playlist_dir, entry])
+            playlist = self.read_playlist(full_path)
+            if playlist:
+                playlists.append(playlist)  
+        return playlists
+
+
+
 
     def read_config(self, data, fname):
         """
@@ -543,3 +620,18 @@ class UltraStarHelper:
         if os.path.exists(song_config_multi):
             self.update_config(song_config_multi, field, value)
         
+
+def test_read_playlists():
+    AppEnv.config("config/test_config.cfg")
+    AppEnv.config_set("verbose",True)
+    AppEnv.print_config()
+    ultrastar_helper = UltraStarHelper(AppEnv.config())
+    pl= ultrastar_helper.get_playlists()
+    for p in pl:
+        print(p.name, p.len)
+        for i in p.songs:
+            print("\t", i['artist'], i['title'])
+
+if __name__ == "__main__":
+
+    test_read_playlists()
