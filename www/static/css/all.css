@@ -1,9 +1,21 @@
 .card-artist {
     max-width:10em;
-    min-width: 5em;
+    min-width: 10em;
     min-height: 16em;
     max-height: 16em;
 }
+
+.card-playlist {
+    max-width:10em;
+    min-width: 10em;
+    min-height: 16em;
+    max-height: 16em;
+}
+
+.card-playlist > svg {
+    background-color: rgb(100,100,100);
+}
+
 .card-artist-songs {
     font-size: small;
     font-style: italic;
@@ -11,7 +23,20 @@
 
 .card-artist-link:hover > div {
     background-color: rgb(170, 170, 170);
+    text-decoration:none;
 }
+
+.card-playlist-link:hover > div {
+    background-color: rgb(170, 170, 170);
+
+}
+
+.card-playlist-link:link  {
+    text-decoration:none;
+
+}
+
+
 
 /* the datatables wrapper and container */
 /*

@@ -43,7 +43,8 @@ def create_app(config_file):
         return urllib.parse.unquote(s)
 
     @app.route("/")
-    def main():
+    @app.route("/artists")
+    def artists():
         search = request.args.get('search', default = "", type = str)
         cursor = app.ultrastar_helper.db.cursor()
         # using the ID to get the cover is somewhat crap
@@ -61,6 +62,26 @@ def create_app(config_file):
                                title="UltraStar Artist List", 
                                items = artist_list,
                                search_action = "/")
+
+
+
+    @app.route("/playlists")
+    def playlists():
+        search = request.args.get('search', default = "", type = str)
+        
+        # using the ID to get the cover is somewhat crap
+        # but works (the cover of any of the song)
+        # TODO
+        if search:
+            ## add like string format to ease the search
+            playlist_list = app.ultrastar_helper.get_playlists(filter=search)
+        else:
+            playlist_list = app.ultrastar_helper.get_playlists()
+
+        return render_template("playlists.html", 
+                               title="UltraStar Playlists", 
+                               items = playlist_list,
+                               search_action = "/playlists")
 
 
     @app.route("/songs")

@@ -386,7 +386,7 @@ class UltraStarHelper:
 
 
 
-    def get_playlists(self):
+    def get_playlists(self, filter=None):
         """return the list of the playlists
 
         Returns:
@@ -399,7 +399,9 @@ class UltraStarHelper:
             full_path = os.path.sep.join([self.config.full_playlist_dir, entry])
             playlist = self.read_playlist(full_path)
             if playlist:
-                playlists.append(playlist)  
+                if (filter and playlist.name.find(filter) >= 0) or not filter:
+                    playlists.append(playlist)
+
         return playlists
 
 
