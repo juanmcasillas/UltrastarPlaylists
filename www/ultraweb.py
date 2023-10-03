@@ -68,7 +68,7 @@ def create_app(config_file):
     @app.route("/playlists")
     def playlists():
         search = request.args.get('search', default = "", type = str)
-        
+       
         # using the ID to get the cover is somewhat crap
         # but works (the cover of any of the song)
         # TODO
@@ -82,6 +82,29 @@ def create_app(config_file):
                                title="UltraStar Playlists", 
                                items = playlist_list,
                                search_action = "/playlists")
+
+
+    @app.route("/playlist")
+    def playlist():
+        playlist_id_uu = request.args.get('name', default = "", type = str)
+        
+        
+        if not playlist_id_uu:
+            abort(403)
+
+        playlist_id = uudecode(playlist_id_uu)
+        playlist = app.ultrastar_helper.get_playlist(filename=playlist_id)
+        if not playlist:
+            abort(403)
+        title = "Ultrastar Playlist %s" % playlist.name   
+        
+        
+        return render_template("songs.html", 
+                               title=title, 
+                               artist=None,
+                               search=None,
+                               playlist=playlist,
+                               search_action = "/songs")
 
 
     @app.route("/songs")
@@ -102,6 +125,7 @@ def create_app(config_file):
         return render_template("songs.html", 
                                title=title, 
                                artist=uuencode(artist_id), 
+                               playlist=None,
                                search=search,
                                search_action = "/songs")
     
@@ -109,23 +133,35 @@ def create_app(config_file):
     @app.route("/data")
     def data():
         artist_id = request.args.get('artist', default = "", type = str)
+        playlist_id = request.args.get('playlist', default = "", type = str)
         search = request.args.get('search', default = "", type = str)
         cursor = app.ultrastar_helper.db.cursor()
        
-        if not search:
-            if artist_id:
-                cursor.execute("select * from songs where artist=? order by title",(artist_id,))
-            else:
-                cursor.execute("select * from songs;")
+        if playlist_id:
+            playlist_id = uudecode(playlist_id)
+            playlist = app.ultrastar_helper.get_playlist(filename = playlist_id)
+            if not playlist:
+                abort(403)
+            # read the songs.
+            rows = playlist.songs
+    
+            
         else:
-            ## add like string format to ease the search
-            search = "%%%s%%" % search
-            if artist_id:
-                cursor.execute("select * from songs where artist=? and title like ? order by title",(artist_id,search))
+
+            if not search:
+                if artist_id:
+                    cursor.execute("select * from songs where artist=? order by title",(artist_id,))
+                else:
+                    cursor.execute("select * from songs;")
             else:
-                cursor.execute("select * from songs where title like ?;", (search,))
-        
-        rows = cursor.fetchall()
+                ## add like string format to ease the search
+                search = "%%%s%%" % search
+                if artist_id:
+                    cursor.execute("select * from songs where artist=? and title like ? order by title",(artist_id,search))
+                else:
+                    cursor.execute("select * from songs where title like ?;", (search,))
+            
+            rows = cursor.fetchall()
 
         data = []
         for row in rows:

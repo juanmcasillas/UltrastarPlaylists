@@ -7,36 +7,28 @@
 <div class="container-fluid">
 
     <div class="h1">Play Lists</div>
-    <div class="row">
-        <div class="col">    
-            <div class="d-flex flex-row flex-wrap">
+    <div class="d-flex flex-row flex-wrap">
                 {% for item in items -%}
-                <a class="card-playlist-link" href="/playlist?name={{item.name|uuencode}}">
+                <a class="card-playlist-link" href="/playlist?name={{item.filename|uuencode}}">
                 <div class="card h-100 card-playlist">
-                    
-                    <svg class="card-img-top" viewBox="0 0 10em 10em" xmlns="http://www.w3.org/2000/svg">
-                        <text x="50" y="105" font-size="8em" font-family="monospace">{{item.name[0].upper()}}</text>
-                      </svg>
-
-
-                    
-                    <div class="card-body text-center">
+                    <div class="card-header h3 text-center">
+                        {{item.name.upper()}}
                         <div class="card-title h6">
-                            {{item.name}} <nobr><span class="card-artist-songs">({{item.len}} songs)</span></nobr>
+                            <nobr><span class="card-artist-songs">({{item.len}} songs)</span></nobr>
+                        </div>
+                    </div>
+                    <div class="card-body overflow-scroll">
+                        <div class="text-left small">
+                            <ul>
+                                {% for song in item.songs -%}
+                                <li><b>{{song.artist}}</b> <i>{{song.title}}</i>
+                                {% endfor -%}
                         </div>
                     </div>
                 </div>
                 </a>
                 {% endfor -%}
-            </div>
-        </div>
-        <div class="col">
-            <div id="song-list" class="">
-                ccc
-            </div>
-        </div>
     </div>
-
 </div>
 
 

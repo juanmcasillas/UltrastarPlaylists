@@ -6,7 +6,13 @@
 
 <div class="container-fluid">
 
-<div class="h1">Song List</div>
+<div class="h1">Song List
+    {% if playlist != None %}
+        for playlist {{playlist.name}}
+    {% elif artist != None %}
+        for artist {{artist}}
+    {% endif %}
+</div>
 <div  class="">
 
 <table id="songs" class="display nowrap responsive" width="100%">
@@ -64,7 +70,7 @@
                 language: {
                   url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
                 },
-                ajax: '/data?artist={{artist}}&search={{search}}',
+                ajax: '/data?artist={{artist}}&playlist={{playlist.filename}}&search={{search}}',
                 columns: [
                     { data: 'id'},
                     { data: 'artist'},

@@ -111,7 +111,8 @@ class UltraStarHelper:
         
         cursor.close()
 
-
+    
+  
     def insert_into_db(self,items):
         """
         inserts data into the database. if Items is dict, insert it, else
@@ -291,6 +292,35 @@ class UltraStarHelper:
         config['multi'] = is_multi
         return config
 
+    def get_song(self,artist=None, title=None, song_path=None):
+        """get the contents of the song from DB
+
+        Args:
+            song_path (str, optional): the dir path of the song. Defaults to None.
+
+        Returns:
+            dict: the dict with the song data, or None
+        """
+    
+        if artist and title:
+            cursor = self.db.cursor()
+            cursor.execute("select * from songs where artist=? and title=?",(artist, title,))
+            data = cursor.fetchone()
+            cursor.close()
+
+        if song_path:
+            cursor = self.db.cursor()
+            cursor.execute("select * from songs where dirname=?",(song_path,))
+            data = cursor.fetchone()
+            cursor.close()
+
+        if not data:
+            print("can't retrieve from db", song_path)
+            return None
+        
+        data = dict(data)
+        data = self.merge_config(data,None,data['dirname'], data['path'])
+        return data
 
     def get_songs(self, dirname):
         """retrieve the list of songs in the filesystem
@@ -330,6 +360,8 @@ class UltraStarHelper:
                         )
         return songs
 
+    
+
     def read_playlist(self, fname):
         """read the playlist and build the configuration item
             Playlist format:
@@ -365,6 +397,12 @@ class UltraStarHelper:
                     song_dir = " - ".join([artist, title])
                     song_path = os.path.sep.join([self.config.full_songs_dir, song_dir])
                     entry = { 'artist': artist, 'title': title, 'path': song_path }
+                    entry_db = self.get_song(artist=artist, title=title)
+                    if not entry_db:
+                        entry['found'] = False
+                    else:
+                        entry = entry_db
+                        entry['found'] = True
 
                     if not os.path.exists(song_path) or not os.path.isdir(song_path):
                         if self.verbose > 1:
@@ -399,14 +437,32 @@ class UltraStarHelper:
             full_path = os.path.sep.join([self.config.full_playlist_dir, entry])
             playlist = self.read_playlist(full_path)
             if playlist:
-                if (filter and playlist.name.find(filter) >= 0) or not filter:
+                if (filter and playlist.name.lower().find(filter.lower()) >= 0) or not filter:
                     playlists.append(playlist)
 
         return playlists
 
 
+    def get_playlist(self, name=None, filename=None):
+        """return one playlist
 
+        Returns:
+            playlist data or none
+        """
 
+        if not filename.lower().endswith('.upl'):
+            filename = filename + '.upl'
+        
+        full_path = os.path.sep.join([self.config.full_playlist_dir, filename])
+        if not os.path.exists(full_path) or not os.path.isfile(full_path):
+            print(full_path)
+            return None
+        
+        playlist = self.read_playlist(full_path)
+        if playlist:
+            return playlist
+        return None
+    
     def read_config(self, data, fname):
         """
         Read the config from the songs configuration file.
